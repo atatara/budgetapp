@@ -31,6 +31,11 @@ server:
     - type: http
       port: 8081
   registerDefaultExceptionMappers: false
+  metrics:
+    reporters:
+      - type: graphite
+        host: localhost
+        port: 8082
 
 assets:
   overrides:
