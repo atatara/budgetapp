@@ -1,5 +1,23 @@
 package io.budgetapp;
 
+import java.rmi.registry.Registry;
+import java.util.concurrent.TimeUnit;
+import java.net.InetSocketAddress;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.ScheduledReporter;
+import com.codahale.metrics.graphite.Graphite;
+import com.codahale.metrics.graphite.GraphiteReporter;
+import com.codahale.metrics.graphite.GraphiteUDP;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.annotations.VisibleForTesting;
+import io.dropwizard.metrics.BaseReporterFactory;
+import io.dropwizard.validation.OneOf;
+import io.dropwizard.validation.PortRange;
+import org.hibernate.validator.constraints.NotEmpty;
+
+import javax.validation.constraints.NotNull;
+
 import com.bazaarvoice.dropwizard.assets.ConfiguredAssetsBundle;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import io.budgetapp.application.ConstraintViolationExceptionMapper;
@@ -95,6 +113,18 @@ public class BudgetApplication extends Application<AppConfiguration> {
 
         // password encoder
         final PasswordEncoder passwordEncoder = new PasswordEncoder();
+
+        //metrics
+        //LocateRegistry.getRegistry("localhost", 5000);
+        System.out.println("Start of registry");
+        final Graphite graphite = new Graphite(new InetSocketAddress("localhost", 2003));
+        final GraphiteReporter reporter = GraphiteReporter.forRegistry(new MetricRegistry())
+                                                  .prefixedWith("web1.example.com")
+                                                  .convertRatesTo(TimeUnit.SECONDS)
+                                                  .convertDurationsTo(TimeUnit.MILLISECONDS)
+                                                  .build(graphite);
+        reporter.start(1, TimeUnit.MINUTES);
+        System.out.println("End of registry");
 
         // DAO
         final CategoryDAO categoryDAO = new CategoryDAO(hibernate.getSessionFactory(), configuration);
